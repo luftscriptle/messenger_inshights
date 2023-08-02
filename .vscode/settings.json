@@ -1,0 +1,8 @@
+{
+    "editor.formatOnSave": true,
+    "files.autoSave": "afterDelay",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
+}
