@@ -1,0 +1,29 @@
+default_language_version:
+  python: python3.11.4
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+
+      - id: end-of-file-fixer
+        log_file: logs/pre-commit.log
+
+      - id: trailing-whitespace
+        log_file: logs/pre-commit.log
+
+      - id: check-json
+        log_file: logs/pre-commit.log
+
+  - repo: https://github.com/psf/black
+    rev: 21.11b1
+    hooks:
+      - id: black
+        log_file: logs/pre-commit.log
+        args:
+          [
+            --include=\.pyi?$,
+            --verbose,
+            --line-length=110,
+            --target-version=py39,
+          ]
