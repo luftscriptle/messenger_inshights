@@ -11,7 +11,7 @@ def fix_encoding(df, cols, encode: str="latin-1", decode: str="utf-8"):
         ].apply(lambda s: str(s).encode(encode).decode(decode))
     return df
 
-def process_convo(convo_dir: str, encode: str="latin-1", decode: str="utf-8"):
+def process_convo(convo_dir: str, encode: str="latin-1", decode: str="utf-8") -> tuple[pd.DataFrame, str, str]:
     dfs_messages = []
     for jfile_path in glob.glob(os.path.join(convo_dir, "message_*.json")):
         # Retrieve contents
