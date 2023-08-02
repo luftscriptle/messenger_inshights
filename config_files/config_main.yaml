@@ -1,4 +1,4 @@
-input: 
+input:
   path_to_data: D:/Data/data/messenger_data/messages/inbox
 output:
   output_data_path: C:/Users/Louis/Documents/code/python/messenger_inshights/outputs
