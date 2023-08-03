@@ -5,7 +5,13 @@ from typing import Optional
 
 os.path.sep = "/"
 
-NOT_NAN_COLS_INDICATE_NOT_A_MESSAGE = {"is_unsent", "reactions", "sticker", "photos", "gifs"}
+NOT_NAN_COLS_INDICATE_NOT_A_MESSAGE = {
+    "is_unsent",
+    "reactions",
+    "sticker",
+    "photos",
+    "gifs",
+}
 
 
 def get_minimal_convo(
@@ -26,3 +32,8 @@ def get_engagement(df_message: pd.DataFrame) -> pd.DataFrame:
         .drop("timestamp_ms", axis="columns")
     )
     return df_engagement
+
+
+def get_length_histogram(df_message: pd.DataFrame):
+    df_length = df_message.content.apply(len).value_counts()
+    return df_length
