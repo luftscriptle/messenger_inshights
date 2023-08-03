@@ -2,14 +2,7 @@ import pandas as pd
 import os
 import glob
 import json
-
-os.path.sep = "/"
-
-
-def fix_encoding(df, cols, encode: str = "latin-1", decode: str = "utf-8"):
-    for col in cols:
-        df.loc[:, col] = df[col].apply(lambda s: str(s).encode(encode).decode(decode))
-    return df
+from data.utils.decoding import fix_encoding
 
 
 def get_convo_info(convo_dir: str, encode: str = "latin-1", decode: str = "utf-8"):
@@ -34,13 +27,3 @@ def get_convo_info(convo_dir: str, encode: str = "latin-1", decode: str = "utf-8
         df_participants = fix_encoding(df_participants, ["name"])
     df_message = pd.concat(dfs_messages)
     return df_message, title, thread_path
-
-
-def get_engagement(df_message) -> pd.DataFrame:
-    df_engagement = (
-        df_message.groupby("sender_name")
-        .agg("count")
-        .sort_values("content")
-        .drop("timestamp_ms", axis="columns")
-    )
-    return df_engagement
