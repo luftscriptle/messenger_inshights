@@ -20,9 +20,13 @@ def main():
     cfg = get_config(args.config)
     for conv_dir in glob.glob(os.path.join(cfg.input.path_to_data, "*")):
         df_message, title, thread_path = get_convo_info(conv_dir)
-        filtered_df = get_minimal_convo(df_message)
+        filtered_df = get_minimal_convo(
+            df_message, supplementary_interactions=cfg.input.supplementary_interactions
+        )
         engagement_df = get_engagement(filtered_df)
-        if engagement_df.content.sum() > 1500:
+
+        if engagement_df.content.sum() > cfg.input.interactions_threshold:
+            filtered_df["messageLen"] = filtered_df.content.apply(len)
             full_path = os.path.join(cfg.output.output_data_path, thread_path)
             if not os.path.exists(full_path):
                 os.makedirs(full_path)
