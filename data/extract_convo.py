@@ -12,9 +12,7 @@ def fix_encoding(df, cols, encode: str = "latin-1", decode: str = "utf-8"):
     return df
 
 
-def process_convo(
-    convo_dir: str, encode: str = "latin-1", decode: str = "utf-8"
-) -> tuple[pd.DataFrame, str, str]:
+def get_convo_info(convo_dir: str, encode: str = "latin-1", decode: str = "utf-8"):
     dfs_messages = []
     for jfile_path in glob.glob(os.path.join(convo_dir, "message_*.json")):
         # Retrieve contents
@@ -35,6 +33,13 @@ def process_convo(
         df_participants = pd.DataFrame(participants)
         df_participants = fix_encoding(df_participants, ["name"])
     df_message = pd.concat(dfs_messages)
+    return df_message, title, thread_path
+
+
+def get_engagement(
+    convo_dir, encode: str = "latin-1", decode: str = "utf-8"
+) -> tuple[pd.DataFrame, str, str]:
+    df_message, title, thread_path = get_convo_info(convo_dir, encode, decode)
     df_engagement = (
         df_message.groupby("sender_name")
         .agg("count")

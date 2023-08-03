@@ -1,5 +1,5 @@
 from data.utils.config import get_config
-from data.extract_convo import process_convo
+from data.extract_convo import get_engagement
 import os
 import glob
 import argparse
@@ -17,7 +17,7 @@ def main():
     args = make_parser().parse_args()
     cfg = get_config(args.config)
     for conv_dir in glob.glob(os.path.join(cfg.input.path_to_data, "*")):
-        convo_df, title, thread_path = process_convo(conv_dir)
+        convo_df, title, thread_path = get_engagement(conv_dir)
         if convo_df.content.sum() > 1500:
             full_path = os.path.join(cfg.output.output_data_path, thread_path)
             if not os.path.exists(full_path):
