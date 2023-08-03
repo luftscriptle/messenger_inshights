@@ -1,5 +1,5 @@
 from data.utils.config import get_config
-from data.extract_convo import get_engagement
+from data.extract_convo import get_engagement, get_convo_info
 import os
 import glob
 import argparse
@@ -17,17 +17,18 @@ def main():
     args = make_parser().parse_args()
     cfg = get_config(args.config)
     for conv_dir in glob.glob(os.path.join(cfg.input.path_to_data, "*")):
-        convo_df, title, thread_path = get_engagement(conv_dir)
-        if convo_df.content.sum() > 1500:
+        df_message, title, thread_path = get_convo_info(conv_dir)
+        engagement_df = get_engagement(df_message)
+        if engagement_df.content.sum() > 1500:
             full_path = os.path.join(cfg.output.output_data_path, thread_path)
             if not os.path.exists(full_path):
                 os.makedirs(full_path)
             try:
-                convo_df.to_csv(os.path.join(full_path, "engagement.csv"))
+                engagement_df.to_csv(os.path.join(full_path, "engagement.csv"))
             except OSError:
                 print(f"Failed to save {title} convo")
             print(f"For conversation '{title}', engagement: ")
-            print(convo_df)
+            print(engagement_df)
 
 
 if __name__ == "__main__":

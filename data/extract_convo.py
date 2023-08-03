@@ -36,14 +36,11 @@ def get_convo_info(convo_dir: str, encode: str = "latin-1", decode: str = "utf-8
     return df_message, title, thread_path
 
 
-def get_engagement(
-    convo_dir, encode: str = "latin-1", decode: str = "utf-8"
-) -> tuple[pd.DataFrame, str, str]:
-    df_message, title, thread_path = get_convo_info(convo_dir, encode, decode)
+def get_engagement(df_message) -> pd.DataFrame:
     df_engagement = (
         df_message.groupby("sender_name")
         .agg("count")
         .sort_values("content")
         .drop("timestamp_ms", axis="columns")
     )
-    return df_engagement, title, thread_path
+    return df_engagement
