@@ -1,4 +1,8 @@
 input:
   path_to_data: D:/Data/data/messenger_data/messages/inbox
+  supplementary_interactions: [
+
+  ] # Should be in [is_unsent, reactions, sticker, photos, gifs]
+  interactions_threshold: 500
 output:
   output_data_path: C:/Users/Louis/Documents/code/python/messenger_inshights/outputs
