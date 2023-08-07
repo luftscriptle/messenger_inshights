@@ -22,6 +22,7 @@ class ConvoProcessor:
         convo_dir: str,
         output_data_path: str,
         supplementary_interactions: Optional[list[str]] = None,
+        interactions_threshold: Optional[int] = None,
         encode: str = "latin-1",
         decode: str = "utf-8",
     ) -> None:
@@ -30,6 +31,7 @@ class ConvoProcessor:
         self.encode = encode
         self.decode = decode
         self.supplementary_interactions = supplementary_interactions
+        self.interactions_threshold = interactions_threshold
         self.extract_convos_from_jsons()
 
     def extract_convos_from_jsons(self):
@@ -80,5 +82,6 @@ class ConvoProcessor:
         df_to_save.to_csv(full_path)
 
     def full_process_convo(self):
-        # TODO
-        pass
+        df_engagement = self.get_engagement()
+        if self.interactions_threshold is None or df_engagement.content.sum() > self.interactions_threshold:
+            self.save_artifact_df(df_engagement, title="engagement")
