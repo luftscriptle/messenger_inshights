@@ -20,13 +20,16 @@ class ConvoProcessor:
     def __init__(
         self,
         convo_dir: str,
-        supplementary_interactions: list[str],
+        output_data_path: str,
+        supplementary_interactions: Optional[list[str]] = None,
         encode: str = "latin-1",
         decode: str = "utf-8",
     ) -> None:
+        self.output_data_path = output_data_path
         self.convo_dir = convo_dir
         self.encode = encode
         self.decode = decode
+        self.supplementary_interactions = supplementary_interactions
         self.extract_convos_from_jsons()
 
     def extract_convos_from_jsons(self):
@@ -38,8 +41,8 @@ class ConvoProcessor:
                 contents = json.load(jfile)
 
             messages = contents["messages"]
-            title = contents["title"].encode(self.encode).decode(self.decode)
-            thread_path = os.path.basename(contents["thread_path"])
+            self.title = contents["title"].encode(self.encode).decode(self.decode)
+            self.thread_path = os.path.basename(contents["thread_path"])
             df_messages_loc = pd.DataFrame(messages)
             df_messages_loc = fix_encoding(
                 df_messages_loc, ["sender_name", "content"], encode=self.encode, decode=self.decode
@@ -51,12 +54,10 @@ class ConvoProcessor:
             df_participants = fix_encoding(df_participants, ["name"])
         self.df_message = pd.concat(dfs_messages)
 
-    def get_minimal_convo(
-        self, df_message: pd.DataFrame, supplementary_interactions: Optional[list[str]] = None
-    ) -> pd.DataFrame:
+    def get_minimal_convo(self) -> pd.DataFrame:
 
-        filtered_messages = df_message.copy()
-        for col in NOT_NAN_COLS_INDICATE_NOT_A_MESSAGE.difference(set(supplementary_interactions or [])):
+        filtered_messages = self.df_message.copy()
+        for col in NOT_NAN_COLS_INDICATE_NOT_A_MESSAGE.difference(set(self.supplementary_interactions or [])):
             if col in filtered_messages.columns:
                 filtered_messages = filtered_messages[filtered_messages[col].isna()]
         return filtered_messages[["sender_name", "timestamp_ms", "content"]]
@@ -73,3 +74,11 @@ class ConvoProcessor:
     def get_length_histogram(self) -> pd.DataFrame:
         df_length = self.df_message.content.apply(len).value_counts()
         return df_length
+
+    def save_artifact_df(self, df_to_save: pd.DataFrame, title) -> None:
+        full_path = os.path.join(self.output_data_path, self.thread_path, title)
+        df_to_save.to_csv(full_path)
+
+    def full_process_convo(self):
+        # TODO
+        pass
