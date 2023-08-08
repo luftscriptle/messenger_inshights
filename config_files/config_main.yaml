@@ -1,5 +1,7 @@
-input:
+
+general:
   path_to_data: D:/Data/data/messenger_data/messages/inbox
+input:
   supplementary_interactions: [
 
   ] # Should be in [is_unsent, reactions, sticker, photos, gifs]

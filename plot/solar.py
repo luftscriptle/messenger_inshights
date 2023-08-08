@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 
 
-def show_polar(count, title, figname):
+def show_polar(count, title) -> Axes:
     ax = plt.subplot(111, projection="polar")
 
     x = np.arange(0, 2 * np.pi, 2 * np.pi / len(count)) + np.pi / len(count)
@@ -64,6 +65,3 @@ def show_polar(count, title, figname):
     ax.set_title(title, fontdict={"fontsize": 15})
     plt.setp(ax.get_yticklabels(), visible=False)
     return ax
-    # plt.savefig(figname)
-    # plt.tight_layout()
-    # plt.show()

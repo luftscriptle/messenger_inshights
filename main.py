@@ -19,7 +19,7 @@ def make_parser() -> argparse.ArgumentParser:
 def main():
     args = make_parser().parse_args()
     cfg = get_config(args.config)
-    for conv_dir in glob.glob(os.path.join(cfg.input.path_to_data, "*")):
+    for conv_dir in glob.glob(os.path.join(cfg.general.path_to_data, "*")):
         convo_processor = ConvoProcessor(conv_dir, **cfg.input, **cfg.output)
         convo_processor.full_process_convo()
 
