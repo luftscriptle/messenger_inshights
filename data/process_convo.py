@@ -18,6 +18,7 @@ NOT_NAN_COLS_INDICATE_NOT_A_MESSAGE = {
     "photos",
     "gifs",
 }
+HOURS_IN_A_DAY = 24
 
 
 class ConvoProcessor:
@@ -96,15 +97,24 @@ class ConvoProcessor:
     def save_artifact_figure(self, figure: Figure, title) -> None:
         figure.tight_layout()
         figure.savefig(os.path.join(self.output_data_path, title))
+        plt.cla()
+        plt.clf()
 
     def get_timestamp_histogram_hours(self):
         df_messages = self.get_minimal_convo()
-        hours: pd.Series = df_messages["timestamp"].dt.hour.value_counts().sort_index()
+        hours: pd.Series = (
+            df_messages["timestamp"]
+            .dt.hour.value_counts()
+            .sort_index()
+            .reindex(list(range(0, HOURS_IN_A_DAY)), fill_value=0)
+        )
         return hours
 
     def full_process_convo(self):
         df_engagement = self.get_engagement()
         if self.interactions_threshold is None or df_engagement.content.sum() > self.interactions_threshold:
+            if not os.path.exists(self.output_data_path):
+                os.makedirs(self.output_data_path)
             self.save_artifact_df(df_engagement, title="engagement")
             histogram = self.get_timestamp_histogram_hours()
             ax = show_polar(histogram, self.title)
