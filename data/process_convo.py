@@ -2,6 +2,10 @@ import pandas as pd
 import os
 from typing import Optional
 from data.utils.decoding import fix_encoding
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import datetime
+from plot.solar import show_polar
 import glob
 import json
 
@@ -26,13 +30,13 @@ class ConvoProcessor:
         encode: str = "latin-1",
         decode: str = "utf-8",
     ) -> None:
-        self.output_data_path = output_data_path
         self.convo_dir = convo_dir
         self.encode = encode
         self.decode = decode
         self.supplementary_interactions = supplementary_interactions
         self.interactions_threshold = interactions_threshold
         self.extract_convos_from_jsons()
+        self.output_data_path = os.path.join(output_data_path, self.thread_path)
 
     def extract_convos_from_jsons(self):
         dfs_messages = []
@@ -47,29 +51,37 @@ class ConvoProcessor:
             self.thread_path = os.path.basename(contents["thread_path"])
             df_messages_loc = pd.DataFrame(messages)
             df_messages_loc = fix_encoding(
-                df_messages_loc, ["sender_name", "content"], encode=self.encode, decode=self.decode
+                df_messages_loc,
+                ["sender_name", "content"],
+                encode=self.encode,
+                decode=self.decode,
             )
             dfs_messages.append(df_messages_loc)
 
             participants = contents["participants"]
             df_participants = pd.DataFrame(participants)
             df_participants = fix_encoding(df_participants, ["name"])
-        self.df_message = pd.concat(dfs_messages)
+        df_message = pd.concat(dfs_messages)
+        df_message["timestamp"] = df_message["timestamp_ms"].apply(
+            lambda tms: datetime.datetime.fromtimestamp(int(tms) * 1e-3)
+        )
+        df_message = df_message.drop("timestamp_ms", axis="columns")
+        self.df_message = df_message
 
     def get_minimal_convo(self) -> pd.DataFrame:
-
         filtered_messages = self.df_message.copy()
         for col in NOT_NAN_COLS_INDICATE_NOT_A_MESSAGE.difference(set(self.supplementary_interactions or [])):
             if col in filtered_messages.columns:
                 filtered_messages = filtered_messages[filtered_messages[col].isna()]
-        return filtered_messages[["sender_name", "timestamp_ms", "content"]]
+
+        return filtered_messages[["sender_name", "timestamp", "content"]]
 
     def get_engagement(self) -> pd.DataFrame:
         df_engagement = (
             self.df_message.groupby("sender_name")
             .agg("count")
             .sort_values("content")
-            .drop("timestamp_ms", axis="columns")
+            .drop("timestamp", axis="columns")
         )
         return df_engagement
 
@@ -78,10 +90,23 @@ class ConvoProcessor:
         return df_length
 
     def save_artifact_df(self, df_to_save: pd.DataFrame, title) -> None:
-        full_path = os.path.join(self.output_data_path, self.thread_path, title)
+        full_path = os.path.join(self.output_data_path, title)
         df_to_save.to_csv(full_path)
+
+    def save_artifact_figure(self, figure: Figure, title) -> None:
+        figure.tight_layout()
+        figure.savefig(os.path.join(self.output_data_path, title))
+
+    def get_timestamp_histogram_hours(self):
+        df_messages = self.get_minimal_convo()
+        hours: pd.Series = df_messages["timestamp"].dt.hour.value_counts().sort_index()
+        return hours
 
     def full_process_convo(self):
         df_engagement = self.get_engagement()
         if self.interactions_threshold is None or df_engagement.content.sum() > self.interactions_threshold:
             self.save_artifact_df(df_engagement, title="engagement")
+            histogram = self.get_timestamp_histogram_hours()
+            ax = show_polar(histogram, self.title)
+            fig_hist = ax.get_figure()
+            self.save_artifact_figure(fig_hist, "Histogram of the messages during the day")
