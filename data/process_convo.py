@@ -43,7 +43,7 @@ class ConvoProcessor:
         dfs_messages = []
         for jfile_path in glob.glob(os.path.join(self.convo_dir, "message_*.json")):
             # Retrieve contents
-            with open(jfile_path, encoding="utf-8") as jfile:
+            with open(jfile_path, encoding=self.decode) as jfile:
                 jfile.encoding
                 contents = json.load(jfile)
 
@@ -62,6 +62,9 @@ class ConvoProcessor:
             participants = contents["participants"]
             df_participants = pd.DataFrame(participants)
             df_participants = fix_encoding(df_participants, ["name"])
+
+        self.participants = df_participants
+        # Process df_messages
         df_message = pd.concat(dfs_messages)
         df_message["timestamp"] = df_message["timestamp_ms"].apply(
             lambda tms: datetime.datetime.fromtimestamp(int(tms) * 1e-3)
@@ -90,11 +93,11 @@ class ConvoProcessor:
         df_length = self.df_message.content.apply(len).value_counts()
         return df_length
 
-    def save_artifact_df(self, df_to_save: pd.DataFrame, title) -> None:
+    def save_artifact_df(self, df_to_save: pd.DataFrame, title: str) -> None:
         full_path = os.path.join(self.output_data_path, title)
         df_to_save.to_csv(full_path)
 
-    def save_artifact_figure(self, figure: Figure, title) -> None:
+    def save_artifact_figure(self, figure: Figure, title: str) -> None:
         figure.tight_layout()
         figure.savefig(os.path.join(self.output_data_path, title))
         plt.cla()
@@ -105,18 +108,23 @@ class ConvoProcessor:
         hours: pd.Series = (
             df_messages["timestamp"]
             .dt.hour.value_counts()
-            .sort_index()
-            .reindex(list(range(0, HOURS_IN_A_DAY)), fill_value=0)
+            .sort_index()  # For plot facilitation
+            .reindex(list(range(0, HOURS_IN_A_DAY)), fill_value=0)  # No messages sent during missing hours
         )
         return hours
+
+    def get_asymetry_graph(self) -> Figure:
+        pass
 
     def full_process_convo(self):
         df_engagement = self.get_engagement()
         if self.interactions_threshold is None or df_engagement.content.sum() > self.interactions_threshold:
             if not os.path.exists(self.output_data_path):
                 os.makedirs(self.output_data_path)
-            self.save_artifact_df(df_engagement, title="engagement")
+            self.save_artifact_df(df_engagement, title="engagement.csv")
             histogram = self.get_timestamp_histogram_hours()
             ax = show_polar(histogram, self.title)
             fig_hist = ax.get_figure()
             self.save_artifact_figure(fig_hist, "Histogram of the messages during the day")
+            if len(self.participants) == 2:
+                asymetry_graph = self.get_asymetry_graph()
